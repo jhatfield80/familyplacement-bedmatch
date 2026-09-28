@@ -1,0 +1,12 @@
+{
+  "name": "bedmatch-family-placement",
+  "version": "1.0.0",
+  "description": "BedMatch Family Placement landing page",
+  "private": true,
+  "scripts": {
+    "optimize": "node scripts/optimize-images.mjs"
+  },
+  "keywords": ["bedmatch", "foster-care", "medical-foster"],
+  "author": "BedMatch Health",
+  "license": "UNLICENSED"
+}

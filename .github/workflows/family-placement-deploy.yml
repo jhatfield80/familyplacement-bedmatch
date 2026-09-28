@@ -1,0 +1,46 @@
+name: Deploy family-placement landing page (WHM)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup SSH known_hosts (SFTP only)
+        if: ${{ secrets.WHM_PROTOCOL == 'sftp' || !secrets.WHM_PROTOCOL }}
+        run: |
+          mkdir -p ~/.ssh
+          if [ -n "${{ secrets.WHM_KNOWN_HOSTS }}" ]; then
+            echo "${{ secrets.WHM_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -p ${{ secrets.WHM_PORT || '22' }} ${{ secrets.WHM_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          fi
+      
+      - name: Deploy to WHM via SFTP/FTPS
+        uses: SamKirkland/FTP-Deploy-Action@4.3.3
+        with:
+          server: ${{ secrets.WHM_HOST }}
+          username: ${{ secrets.WHM_USER }}
+          password: ${{ secrets.WHM_PASSWORD }}
+          protocol: ${{ secrets.WHM_PROTOCOL || 'sftp' }}
+          port: ${{ secrets.WHM_PORT || (secrets.WHM_PROTOCOL == 'ftps' && '21' || '22') }}
+          local-dir: ./site/
+          server-dir: ${{ secrets.WHM_REMOTE_DIR }}/
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/README.md
+      
+      - name: Deployment Success
+        run: |
+          echo "✅ Site deployed successfully to familyplacement.bedmatch.health"
+          echo "🌐 Live at: https://familyplacement.bedmatch.health"
